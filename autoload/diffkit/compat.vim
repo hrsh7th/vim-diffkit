@@ -40,6 +40,15 @@ function! s:Diff.detach(bufnr) abort
 endfunction
 
 "
+" sync
+"
+function! s:Diff.sync(bufnr) abort
+  if has_key(self.bufs, a:bufnr)
+    let self.bufs[a:bufnr].lines = getbufline(a:bufnr, '^', '$')
+  endif
+endfunction
+
+"
 " compute
 "
 function! s:Diff.compute(bufnr) abort

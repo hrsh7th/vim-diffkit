@@ -106,9 +106,24 @@ function! s:Diff.compute(bufnr) abort
 endfunction
 
 "
-" flush
+" sync
 "
-function! s:Diff.flush(bufnr) abort
+function! s:Diff.sync(bufnr) abort
+  if has_key(self.bufs, a:bufnr)
+    let l:buf = self.bufs[a:bufnr]
+    let l:buf.lines = getbufline(a:bufnr, '^', '$')
+    let l:buf.diff = {
+          \   'fix': 0,
+          \   'old': {
+          \     'start': len(l:buf.lines),
+          \     'end': 0,
+          \   },
+          \   'new': {
+          \     'start': len(l:buf.lines),
+          \     'end': 0,
+          \   }
+          \ }
+  endif
 endfunction
 
 "
