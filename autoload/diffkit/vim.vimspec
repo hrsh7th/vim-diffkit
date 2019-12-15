@@ -1,0 +1,99 @@
+if has('nvim')
+  finish
+endif
+
+let s:expect = themis#helper('expect')
+let s:Diff = diffkit#vim#import()
+
+Describe diffkit#vim
+
+  Before each
+    if exists('s:diff')
+      call s:diff.detach(s:bufnr)
+    endif
+    let s:bufnr = bufadd('diffkit')
+    let s:diff = s:Diff.new()
+    execute printf('%sbuffer', s:bufnr)
+  End
+
+  Describe #compute
+
+    It Should compute diff 1
+      %delete _
+      call setline(1, ['one', 'two', 'three'])
+      call s:diff.attach(s:bufnr)
+
+      " update 1 (one, a, b, c, two, three)
+      call append(1, ['a', 'b', 'c'])
+      call s:expect(s:diff.compute(s:bufnr)).to_equal(diffkit#compute(
+            \   ['one', 'two', 'three'],
+            \   getline('^', '$')
+            \ ))
+
+      " update 2 (one, a, two, three)
+      call deletebufline(s:bufnr, 3, 4)
+      call s:expect(s:diff.compute(s:bufnr)).to_equal(diffkit#compute(
+            \   ['one', 'a', 'b', 'c', 'two', 'three'],
+            \   getline('^', '$')
+            \ ))
+    End
+
+  End
+
+  Describe #_on_change
+
+    It Should sync diff lines 1
+      " init
+      %delete _
+      call setline(1, ['one', 'two', 'three'])
+      call s:diff.attach(s:bufnr)
+      let s:diff = s:diff.bufs[s:bufnr].diff
+
+      " update 1 (one, a, b, c, two, three)
+      call append(1, ['a', 'b', 'c'])
+      call listener_flush(s:bufnr)
+      call s:expect(s:diff.old).to_equal({
+            \   'start': 2,
+            \   'end': 2
+            \ })
+      call s:expect(s:diff.new).to_equal({
+            \   'start': 2,
+            \   'end': 5
+            \ })
+
+      " update 2 (one, a, two, three)
+      call deletebufline(s:bufnr, 3, 4)
+      call listener_flush(s:bufnr)
+      call s:expect(s:diff.old).to_equal({
+            \   'start': 2,
+            \   'end': 2
+            \ })
+      call s:expect(s:diff.new).to_equal({
+            \   'start': 2,
+            \   'end': 3
+            \ })
+
+      " update 3 (one, a, two, b, c, three)
+      call append(3, ['b', 'c'])
+      call listener_flush(s:bufnr)
+      call s:expect(s:diff.old).to_equal({
+            \   'start': 2,
+            \   'end': 3
+            \ })
+      call s:expect(s:diff.new).to_equal({
+            \   'start': 2,
+            \   'end': 6
+            \ })
+
+      " update 4 (0, one, a, two, b, c, three)
+      call append(0, ['0'])
+      call listener_flush(s:bufnr)
+      call s:expect(s:diff.old).to_equal({
+            \   'start': 1,
+            \   'end': 3
+            \ })
+    End
+
+  End
+
+End

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "test": "npm run test:vim && npm run test:nvim",
+    "test:vim": "THEMIS_VIM=vim themis .",
+    "test:nvim": "THEMIS_VIM=nvim themis .",
     "open:vim": "vim -u .vimrc ./autoload/diffkit/vim.vim",
     "open:nvim": "vim -u .vimrc ./autoload/diffkit/nvim.vim"
   },

@@ -73,6 +73,14 @@ function! s:Diff.compute(bufnr) abort
   let l:old = l:buf.lines
   let l:new = getbufline(a:bufnr, '^', '$')
   let l:buf.lines = l:new
+
+  let l:diff = diffkit#compute(
+        \   l:old[l:buf.diff.old.start - 1 : l:buf.diff.old.end - 1],
+        \   l:new[l:buf.diff.new.start - 1 : l:buf.diff.new.end - 1]
+        \ )
+  let l:diff.range.start.line += l:buf.diff.old.start - 1
+  let l:diff.range.end.line += l:buf.diff.old.start - 1
+
   let l:buf.diff = {
         \   'fix': 0,
         \   'old': {
@@ -85,10 +93,7 @@ function! s:Diff.compute(bufnr) abort
         \   }
         \ }
 
-  return diffkit#compute(
-        \   l:old[l:buf.diff.old.start - 1 : l:buf.diff.old.end - 1],
-        \   l:new[l:buf.diff.new.start - 1: l:buf.diff.new.end - 1]
-        \ )
+  return l:diff
 endfunction
 
 "
@@ -110,51 +115,28 @@ function! s:Diff._on_change(params) abort
   " old diff.
   let l:old = l:diff.old
   for l:change in a:params.changes
-    echomsg string(l:change)
-    let l:c = copy(l:change)
-    let l:c.start = l:change.lnum
-    let l:c.end = l:change.end - l:diff.fix
+    let l:old.start = min([l:old.start, l:change.lnum])
+    let l:old.end = max([l:old.end, l:change.end - l:diff.fix])
 
-    let l:diff.fix += l:c.added
-
-    " update start position.
-    if l:c.start <= l:old.start
-      let l:old.start = l:c.start
-    endif
-
-    " update end position.
-    if l:old.end <= l:c.end
-      let l:old.end = l:c.end
+    if l:change.end <= l:old.end + l:diff.fix || l:old.end == -1
+      let l:diff.fix += l:change.added
     endif
   endfor
 
   " new diff.
   let l:new = l:diff.new
   for l:change in a:params.changes
-    if l:change.end <= l:new.start
-      let l:new.start += l:change.added
-    endif
-    if l:change.end <= l:new.end
-      let l:new.end += l:change.added
+    let l:newchange = {
+          \   'start': l:change.lnum,
+          \   'end': l:change.end + l:change.added,
+          \   'added': l:change.added
+          \ }
+    if l:newchange.end <= l:new.end
+      let l:new.end += l:newchange.added
     endif
 
     let l:new.start = min([l:new.start, l:change.lnum])
-    if l:change.end + l:change.added > l:new.end
-      let l:new.end = max([l:new.end, l:change.end])
-    endif
+    let l:new.end = max([l:new.end, l:newchange.end])
   endfor
 endfunction
-
-if exists('s:diff')
-  call s:diff.detach(bufnr('%'))
-endif
-let s:diff = s:Diff.new()
-call s:diff.attach(bufnr('%'))
-
-function! s:compute()
-  echomsg string(s:diff.bufs[bufnr('%')].diff)
-  echomsg string(s:diff.compute(bufnr('%')))
-endfunction
-
-command! DiffCompute call <SID>compute()
 
