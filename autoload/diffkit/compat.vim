@@ -44,7 +44,7 @@ endfunction
 "
 function! s:Diff.compute(bufnr) abort
   if !has_key(self.bufs, a:bufnr)
-    throw 'diffkit: specified no attached bufnr.'
+    throw 'diffkit: invalid bufnr.'
   endif
 
   let l:old = self.bufs[a:bufnr].lines
