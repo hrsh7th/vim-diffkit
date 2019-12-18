@@ -127,6 +127,13 @@ function! s:Diff.sync(bufnr) abort
 endfunction
 
 "
+" flush
+"
+function! s:Diff.flush(bufnr) abort
+  " noop
+endfunction
+
+"
 " _on_change
 "
 " - params.id

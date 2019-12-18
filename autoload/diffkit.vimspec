@@ -27,7 +27,6 @@ Describe diffkit
 
       " update 1 (one, a, b, c, two, three)
       call append(1, ['a', 'b', 'c'])
-      sleep 100m
       call s:expect(s:diff.compute(s:bufnr)).to_equal(diffkit#compute(
             \   ['one', 'two', 'three'],
             \   getline('^', '$')
@@ -35,7 +34,6 @@ Describe diffkit
 
       " update 2 (one, a, two, three)
       call deletebufline(s:bufnr, 3, 4)
-      sleep 100m
       call s:expect(s:diff.compute(s:bufnr)).to_equal(diffkit#compute(
             \   ['one', 'a', 'b', 'c', 'two', 'three'],
             \   getline('^', '$')

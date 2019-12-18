@@ -81,6 +81,13 @@ function! s:Diff.sync(bufnr) abort
 endfunction
 
 "
+" flush
+"
+function! s:Diff.flush(bufnr) abort
+  call listener_flush(a:bufnr)
+endfunction
+
+"
 " compute
 "
 function! s:Diff.compute(bufnr) abort
