@@ -28,6 +28,7 @@ let s:Diff = {}
 function! s:Diff.new() abort
   let l:id = len(keys(s:instances))
   let s:instances[l:id] = extend(deepcopy(s:Diff), {
+        \   'type': 'nvim',
         \   'id': l:id,
         \   'bufs': {}
         \ })
@@ -71,6 +72,44 @@ function! s:Diff.detach(bufnr) abort
 endfunction
 
 "
+" sync
+"
+function! s:Diff.sync(bufnr) abort
+  if has_key(self.bufs, a:bufnr)
+    let l:buf = self.bufs[a:bufnr]
+    let l:buf.lines = getbufline(a:bufnr, '^', '$')
+    let l:buf.diff = {
+          \   'fix': 0,
+          \   'old': {
+          \     'start': len(l:buf.lines),
+          \     'end': 0,
+          \   },
+          \   'new': {
+          \     'start': len(l:buf.lines),
+          \     'end': 0,
+          \   }
+          \ }
+  endif
+endfunction
+
+"
+" flush
+"
+function! s:Diff.flush(bufnr) abort
+  " noop
+endfunction
+
+"
+" get_lines
+"
+function! s:Diff.get_lines(bufnr) abort
+  if !has_key(self.bufs, a:bufnr)
+    return getbufline(a:bufnr, '^', '$')
+  endif
+  return self.bufs[a:bufnr].lines
+endfunction
+
+"
 " compute
 "
 function! s:Diff.compute(bufnr) abort
@@ -103,34 +142,6 @@ function! s:Diff.compute(bufnr) abort
         \ }
 
   return l:diff
-endfunction
-
-"
-" sync
-"
-function! s:Diff.sync(bufnr) abort
-  if has_key(self.bufs, a:bufnr)
-    let l:buf = self.bufs[a:bufnr]
-    let l:buf.lines = getbufline(a:bufnr, '^', '$')
-    let l:buf.diff = {
-          \   'fix': 0,
-          \   'old': {
-          \     'start': len(l:buf.lines),
-          \     'end': 0,
-          \   },
-          \   'new': {
-          \     'start': len(l:buf.lines),
-          \     'end': 0,
-          \   }
-          \ }
-  endif
-endfunction
-
-"
-" flush
-"
-function! s:Diff.flush(bufnr) abort
-  " noop
 endfunction
 
 "

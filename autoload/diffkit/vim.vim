@@ -13,6 +13,7 @@ let s:Diff = {}
 "
 function! s:Diff.new() abort
   return extend(deepcopy(s:Diff), {
+        \   'type': 'vim',
         \   'bufs': {}
         \ })
 endfunction
@@ -85,6 +86,16 @@ endfunction
 "
 function! s:Diff.flush(bufnr) abort
   call listener_flush(a:bufnr)
+endfunction
+
+"
+" get_lines
+"
+function! s:Diff.get_lines(bufnr) abort
+  if !has_key(self.bufs, a:bufnr)
+    return getbufline(a:bufnr, '^', '$')
+  endif
+  return self.bufs[a:bufnr].lines
 endfunction
 
 "
